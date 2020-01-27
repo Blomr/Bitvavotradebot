@@ -3,6 +3,8 @@ package nl.remcoblom.bitvavotraderobot;
 import org.json.JSONObject;
 
 import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Optional;
 
 public class Market {
 
@@ -23,6 +25,9 @@ public class Market {
         this.price = jsonObject.getDouble(APIRequester.KEY_AVAILABLE);
     }
 
+    public static Optional<Market> fromString(String marketName, List<Market> markets) {
+        return markets.stream().filter(m -> m.getName().equals(marketName)).findFirst();
+    }
     public Currency getBaseCurrency() {
         return baseCurrency;
     }

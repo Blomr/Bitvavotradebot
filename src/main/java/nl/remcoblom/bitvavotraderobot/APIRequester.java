@@ -1,6 +1,7 @@
 package nl.remcoblom.bitvavotraderobot;
 
 import com.bitvavo.api.Bitvavo;
+import jdk.vm.ci.code.site.Mark;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -42,28 +43,42 @@ public class APIRequester {
         return instance;
     }
 
-    public Map<String,Double> getAvailableMarkets() {
+//    public Map<String,Double> getAvailableMarkets() {
+//        JSONArray arrayResponse = bitvavo.tickerPrice(new JSONObject());
+//        Map<String,Double> availableMarkets = new HashMap<>();
+//        for (int i = 0; i< arrayResponse.length(); i++) {
+//            JSONObject jsonObject = arrayResponse.getJSONObject(i);
+//            availableMarkets.put(jsonObject.getString(KEY_MARKET), jsonObject.getDouble(KEY_PRICE));
+//        }
+//        return availableMarkets;
+//    }
+
+    public List<Market> getAvailableMarkets() {
         JSONArray arrayResponse = bitvavo.tickerPrice(new JSONObject());
-        Map<String,Double> availableMarkets = new HashMap<>();
+        List<Market> availableMarkets = new ArrayList<>();
         for (int i = 0; i< arrayResponse.length(); i++) {
-            JSONObject jsonObject = arrayResponse.getJSONObject(i);
-            availableMarkets.put(jsonObject.getString(KEY_MARKET), jsonObject.getDouble(KEY_PRICE));
+            availableMarkets.add(new Market(arrayResponse.getJSONObject(i)));
         }
         return availableMarkets;
     }
 
-    public Map<String,Double> getAvailableAssets() {
+//    public Map<String,Double> getAvailableAssets() {
+//        JSONArray arrayResponse = bitvavo.balance(new JSONObject());
+//        Map<String,Double> availableAssets = new HashMap<>();
+//        for (int i = 0; i< arrayResponse.length(); i++) {
+//            JSONObject jsonObject = arrayResponse.getJSONObject(i);
+//            availableAssets.put(jsonObject.getString(KEY_CURRENCY), jsonObject.getDouble(KEY_AVAILABLE));
+//        }
+//        return availableAssets;
+//    }
+
+    public List<Asset> getAvailableAssets() {
         JSONArray arrayResponse = bitvavo.balance(new JSONObject());
-        Map<String,Double> availableAssets = new HashMap<>();
+        List<Asset> availableAssets = new ArrayList<>();
         for (int i = 0; i< arrayResponse.length(); i++) {
-            JSONObject jsonObject = arrayResponse.getJSONObject(i);
-            availableAssets.put(jsonObject.getString(KEY_CURRENCY), jsonObject.getDouble(KEY_AVAILABLE));
+            availableAssets.add(new Asset(arrayResponse.getJSONObject(i)));
         }
         return availableAssets;
-    }
-
-    public int getNumberOpenOrders(Market market) {
-        return getOpenOrders(market).size();
     }
 
     public List<Order> getOpenOrders(Market market) {
@@ -75,6 +90,31 @@ public class APIRequester {
             openOrders.add(new Order(market, jsonObject));
         }
         return openOrders;
+    }
+
+    public Map<Market,List<Order>> getOpenOrders() {
+        JSONObject jsonObjectRequest = new JSONObject();
+        JSONArray arrayResponse = bitvavo.ordersOpen(jsonObjectRequest);
+        Map<Market,List<Order>> openOrders = new HashMap<>();
+        for (int i = 0; i< arrayResponse.length(); i++) {
+            JSONObject jsonObject = arrayResponse.getJSONObject(i);
+            Market market = Market.fromString(jsonObject.getString(KEY_MARKET), BitvavoRobot.getAvailableMarkets()).get();
+            openOrders.compute(market, (k,v) -> {
+                List<Order> orderList;
+                if (v == null) {
+                    orderList = new ArrayList<>();
+                } else {
+                    orderList = v;
+                }
+                orderList.add(new Order(market,jsonObject));
+                return orderList;
+            });
+        }
+        return openOrders;
+    }
+
+    public int getNumberOpenOrders(Market market) {
+        return getOpenOrders(market).size();
     }
 
     public long getNumberOpenOrders(Market market, String buyOrSell) {

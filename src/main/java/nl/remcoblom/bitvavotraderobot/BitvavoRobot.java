@@ -1,13 +1,14 @@
 package nl.remcoblom.bitvavotraderobot;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BitvavoRobot {
 
-    private Map<String,Double> availableAssets;
-    private Map<String,Double> availableMarkets;
+    private List<Asset> availableAssets;
+    private static List<Market> availableMarkets;
     private long pauseInMillis;
-    private boolean isActive;
+    private boolean isActive = true;
     private Asset myEUR;
 
     public BitvavoRobot(long pauseInMillis) {
@@ -49,6 +50,7 @@ public class BitvavoRobot {
             System.out.println("VET - Sell orders: " + VETSellOrders);
             System.out.println("VTHO - Buy orders: " + VTHOBuyOrders);
             System.out.println("VTHO - Sell orders: " + VTHOSellOrders);
+            System.out.println(requester.getOpenOrders());
             try {
                 Thread.sleep(pauseInMillis);
             } catch (InterruptedException e) {
@@ -60,6 +62,10 @@ public class BitvavoRobot {
 
     public void stop() {
         isActive = false;
+    }
+
+    public static List<Market> getAvailableMarkets() {
+        return new ArrayList<>(availableMarkets);
     }
 
     public Asset getMyEUR() {
